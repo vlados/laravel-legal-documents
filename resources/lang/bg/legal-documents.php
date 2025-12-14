@@ -16,6 +16,20 @@ return [
     'read_document' => 'Прочети документа',
     'document_versions_count' => 'Този документ има :count версии.',
 
+    // Document Control
+    'document_control' => 'Контрол на документа',
+    'document_title' => 'Заглавие на документа',
+    'document_id' => 'Идентификатор',
+    'effective_date' => 'Дата на влизане в сила',
+
+    // Revision History
+    'revision_history' => 'История на ревизиите',
+    'revision_number' => 'Рев. №',
+    'revision_date' => 'Дата на ревизия',
+    'reason_for_revision' => 'Причина за ревизия',
+    'action' => 'Действие',
+    'initial_release' => 'Първоначална версия',
+
     // Archived version warning
     'viewing_archived_version' => 'Преглеждате архивирана версия',
     'not_current_version' => 'Това не е текущата версия на този документ.',

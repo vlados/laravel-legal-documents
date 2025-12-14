@@ -16,6 +16,20 @@ return [
     'read_document' => 'Read document',
     'document_versions_count' => 'This document has :count versions.',
 
+    // Document Control
+    'document_control' => 'Document Control',
+    'document_title' => 'Document Title',
+    'document_id' => 'Document ID',
+    'effective_date' => 'Effective Date',
+
+    // Revision History
+    'revision_history' => 'Revision History',
+    'revision_number' => 'Rev. No.',
+    'revision_date' => 'Revision Date',
+    'reason_for_revision' => 'Reason for Revision',
+    'action' => 'Action',
+    'initial_release' => 'Initial release',
+
     // Archived version warning
     'viewing_archived_version' => 'You are viewing an archived version',
     'not_current_version' => 'This is not the current version of this document.',
