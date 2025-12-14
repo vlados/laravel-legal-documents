@@ -61,6 +61,7 @@ return [
         'logout',
         'legal.*',
         'filament.*',
+        'livewire.*',
     ],
 
     // Notification settings

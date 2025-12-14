@@ -34,6 +34,7 @@ return [
         'logout',
         'legal.*',
         'filament.*',
+        'livewire.*',
     ],
 
     /*
