@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -65,7 +66,7 @@ class LegalDocumentTypeResource extends Resource
                                     ->maxLength(255)
                                     ->autofocus()
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(function (Forms\Set $set, ?string $state, ?string $old) {
+                                    ->afterStateUpdated(function (Set $set, ?string $state, ?string $old) {
                                         if (blank($state)) {
                                             return;
                                         }

@@ -23,6 +23,13 @@ trait HasLegalAcceptances
             ->exists();
     }
 
+    public function getDocumentAcceptance(LegalDocument $document): ?LegalDocumentAcceptance
+    {
+        return $this->legalAcceptances()
+            ->where('legal_document_id', $document->id)
+            ->first();
+    }
+
     public function hasAcceptedLatest(string $typeSlug): bool
     {
         $type = LegalDocumentType::where('slug', $typeSlug)->first();

@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Breadcrumb --}}
         <nav class="text-sm mb-6">
             <ol class="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
@@ -173,7 +173,7 @@
         {{-- Document Content --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <div class="px-6 py-8 sm:px-8 sm:py-10">
-                <article class="prose prose-lg dark:prose-invert max-w-none">
+                <article class="prose dark:prose-invert max-w-none">
                     {!! $document->content !!}
                 </article>
             </div>
