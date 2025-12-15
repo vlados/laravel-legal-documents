@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
@@ -129,9 +130,19 @@ class LegalDocumentTypeResource extends Resource
                             ->schema([
                                 Forms\Components\Toggle::make('is_required')
                                     ->label('Задължителен документ')
-                                    ->helperText('Потребителите трябва да приемат този документ при регистрация')
+                                    ->helperText('Задължителен за ВСИЧКИ потребители при регистрация')
                                     ->default(true)
-                                    ->inline(false),
+                                    ->inline(false)
+                                    ->live(),
+
+                                Forms\Components\Select::make('required_for_roles')
+                                    ->label('Задължителен за роли')
+                                    ->helperText('Документът е задължителен само за потребители с избраните роли')
+                                    ->multiple()
+                                    ->options(fn () => LegalDocumentType::getAvailableRoles())
+                                    ->visible(fn () => config('legal-documents.roles.enabled', false))
+                                    ->disabled(fn (Get $get) => $get('is_required'))
+                                    ->placeholder('Изберете роли...'),
 
                                 Forms\Components\TextInput::make('sort_order')
                                     ->label('Подредба')
@@ -171,6 +182,15 @@ class LegalDocumentTypeResource extends Resource
                     ->trueColor('success')
                     ->falseColor('gray')
                     ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('required_for_roles')
+                    ->label('За роли')
+                    ->badge()
+                    ->color('warning')
+                    ->separator(', ')
+                    ->placeholder('Всички')
+                    ->visible(fn () => config('legal-documents.roles.enabled', false))
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('currentDocument.version')
                     ->label('Текуща версия')

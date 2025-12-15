@@ -120,4 +120,28 @@ return [
         // Layout to use for the document view page
         'layout' => 'layouts.app',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role-Based Requirements
+    |--------------------------------------------------------------------------
+    |
+    | Configure optional role-based document requirements.
+    | When enabled, documents can be required for specific user roles.
+    | Works with Spatie Permission package or any role system.
+    |
+    */
+    'roles' => [
+        // Enable role-based document requirements
+        // Set to false to use only the global is_required field
+        'enabled' => false,
+
+        // Available roles for the Filament UI dropdown
+        // If empty and Spatie Permission is installed, roles are auto-detected
+        'available' => [],
+
+        // Method name on User model to get role names (array)
+        // Default works with Spatie Permission's getRoleNames()
+        'user_roles_method' => 'getRoleNames',
+    ],
 ];

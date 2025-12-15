@@ -41,6 +41,10 @@ trait HasLegalAcceptances
         return $this->hasAcceptedDocument($type->currentDocument);
     }
 
+    /**
+     * Get pending documents for this user based on their roles.
+     * Falls back to is_required only if roles are disabled.
+     */
     public function getPendingDocuments(): Collection
     {
         $acceptedDocumentIds = $this->legalAcceptances()
@@ -51,8 +55,42 @@ trait HasLegalAcceptances
             ->current()
             ->published()
             ->requiresAcceptance()
-            ->whereHas('type', fn ($q) => $q->required())
+            ->whereHas('type', fn ($q) => $q->requiredForUser($this))
             ->whereNotIn('id', $acceptedDocumentIds)
+            ->with('type')
+            ->get();
+    }
+
+    /**
+     * Get pending documents for specific roles (for preview/onboarding).
+     * Useful when user hasn't been assigned roles yet.
+     */
+    public function getPendingDocumentsForRoles(array $roleNames): Collection
+    {
+        $acceptedDocumentIds = $this->legalAcceptances()
+            ->pluck('legal_document_id')
+            ->toArray();
+
+        return LegalDocument::query()
+            ->current()
+            ->published()
+            ->requiresAcceptance()
+            ->whereHas('type', fn ($q) => $q->requiredForRolesPreview($roleNames))
+            ->whereNotIn('id', $acceptedDocumentIds)
+            ->with('type')
+            ->get();
+    }
+
+    /**
+     * Get all required documents for specific roles (including already accepted).
+     * Useful for onboarding to show all documents regardless of acceptance status.
+     */
+    public function getRequiredDocumentsForRoles(array $roleNames): Collection
+    {
+        return LegalDocument::query()
+            ->current()
+            ->published()
+            ->whereHas('type', fn ($q) => $q->requiredForRolesPreview($roleNames))
             ->with('type')
             ->get();
     }
@@ -60,6 +98,14 @@ trait HasLegalAcceptances
     public function needsToAcceptDocuments(): bool
     {
         return $this->getPendingDocuments()->isNotEmpty();
+    }
+
+    /**
+     * Check if user needs to accept documents for specific roles.
+     */
+    public function needsToAcceptDocumentsForRoles(array $roleNames): bool
+    {
+        return $this->getPendingDocumentsForRoles($roleNames)->isNotEmpty();
     }
 
     public function acceptDocument(
