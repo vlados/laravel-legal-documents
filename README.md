@@ -19,6 +19,20 @@ A Laravel package for managing legal documents (Privacy Policy, Terms of Service
 - **Frontend Routes** - Public pages to view legal documents with version history
 - **Internationalization** - Full i18n support (English and Bulgarian included)
 
+## Screenshots
+
+### Document Types Management
+![Document Types](art/screenshot1.png)
+*Manage document types with role-based requirements*
+
+### Documents List
+![Documents List](art/screenshot2.png)
+*Track document versions, status, and user acceptances*
+
+### Document Editor
+![Document Editor](art/screenshot3.png)
+*Rich text editor with publishing controls and version management*
+
 ## Requirements
 
 - PHP 8.2+
