@@ -11,9 +11,11 @@ A Laravel package for managing legal documents (Privacy Policy, Terms of Service
 - **Version Control** - Track document versions with full history and publish workflow
 - **User Acceptance Tracking** - Record when users accept documents with audit metadata (IP address, user agent)
 - **Re-acceptance on Updates** - Optionally require users to re-accept documents when they are updated
+- **Role-Based Requirements** - Require specific documents for specific user roles (e.g., Terms of Service only for sellers)
 - **Middleware Protection** - Block access to your application until required documents are accepted
 - **Email Notifications** - Notify users when legal documents are updated
 - **Filament Integration** - Optional admin panel with WordPress-style document editor
+- **Formal Document Control** - Professional legal document layout with revision history
 - **Frontend Routes** - Public pages to view legal documents with version history
 - **Internationalization** - Full i18n support (English and Bulgarian included)
 
@@ -82,6 +84,13 @@ return [
         'prefix' => 'legal',
         'middleware' => ['web'],
         'layout' => 'layouts.app',
+    ],
+
+    // Role-based document requirements (optional)
+    'roles' => [
+        'enabled' => false, // Set to true to enable role-based requirements
+        'available' => [],  // Leave empty to auto-detect from Spatie Permission
+        'user_roles_method' => 'getRoleNames', // Method on User model to get roles
     ],
 ];
 ```
@@ -236,6 +245,40 @@ $user->acceptDocument($document, request()->ip(), request()->userAgent());
 $user->acceptDocuments($documentIds, request()->ip(), request()->userAgent());
 ```
 
+### Role-Based Document Requirements
+
+When `roles.enabled` is set to `true`, you can require specific documents for specific user roles:
+
+```php
+use Vlados\LegalDocuments\Models\LegalDocumentType;
+
+// Create a document type required only for sellers
+LegalDocumentType::create([
+    'name' => 'Seller Agreement',
+    'slug' => 'seller-agreement',
+    'is_required' => false, // Not required for everyone
+    'required_for_roles' => ['seller', 'merchant'], // Only required for these roles
+]);
+
+// Check pending documents for a user based on their roles
+$pendingDocuments = $user->getPendingDocumentsForRoles();
+
+// Check if user needs to accept documents based on their roles
+if ($user->needsToAcceptDocumentsForRoles()) {
+    // Redirect to acceptance page
+}
+
+// Get documents required for specific roles
+$sellerDocs = LegalDocumentType::requiredForRoles(['seller'])->get();
+
+// Check if a document type is required for a specific user
+if ($documentType->isRequiredForUser($user)) {
+    // This document is required for this user
+}
+```
+
+The package automatically detects [Spatie Permission](https://github.com/spatie/laravel-permission) roles. If you use a different role system, configure the `user_roles_method` in the config to point to a method on your User model that returns role names.
+
 ## Frontend Routes
 
 The package provides these public routes (configurable via `frontend.prefix`):
@@ -300,6 +343,10 @@ Configure the layout used for the document view page:
 | `acceptDocument($document, $ip, $userAgent)` | Accept a single document |
 | `acceptDocuments($ids, $ip, $userAgent)` | Accept multiple documents |
 | `getAcceptanceHistory()` | Get user's acceptance history |
+| `getDocumentAcceptance(LegalDocument $document)` | Get acceptance record for a specific document |
+| `getPendingDocumentsForRoles()` | Get pending documents filtered by user's roles |
+| `getRequiredDocumentsForRoles(array $roles)` | Get required documents for specific roles |
+| `needsToAcceptDocumentsForRoles()` | Check if user needs to accept documents based on roles |
 
 ### LegalDocument Model
 
@@ -318,6 +365,12 @@ Configure the layout used for the document view page:
 | `documents` | Relationship to all documents |
 | `scopeRequired($query)` | Query scope for required document types |
 | `scopeOrdered($query)` | Query scope for ordered by sort_order |
+| `scopeRequiredForRoles($query, array $roles)` | Query scope for documents required for specific roles |
+| `scopeRequiredForUser($query, $user)` | Query scope for documents required for a specific user |
+| `isRequiredForUser($user)` | Check if document type is required for a specific user |
+| `isRequiredForRoles(array $roles)` | Check if document type is required for specific roles |
+| `rolesEnabled()` | Check if role-based requirements are enabled |
+| `getAvailableRoles()` | Get available roles (auto-detects Spatie Permission) |
 
 ## Events
 
