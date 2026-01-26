@@ -70,10 +70,18 @@ class LegalDocumentsServiceProvider extends ServiceProvider
 
     protected function registerLivewireComponents(): void
     {
-        if (class_exists(Livewire::class)) {
-            Livewire::component('legal-documents::accept-documents', AcceptDocuments::class);
-            Livewire::component('legal-documents::view-document', ViewLegalDocument::class);
-        }
+        $this->callAfterResolving('livewire', function ($livewire) {
+            // Register a resolver for missing components (Livewire 4 compatible)
+            $livewire->resolveMissingComponent(function (string $name) {
+                return match ($name) {
+                    'legal-documents::accept-documents',
+                    'vlados.legal-documents.http.livewire.accept-documents' => AcceptDocuments::class,
+                    'legal-documents::view-document',
+                    'vlados.legal-documents.http.livewire.view-legal-document' => ViewLegalDocument::class,
+                    default => null,
+                };
+            });
+        });
     }
 
     protected function registerRoutes(): void

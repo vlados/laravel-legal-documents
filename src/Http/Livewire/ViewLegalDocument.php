@@ -58,6 +58,7 @@ class ViewLegalDocument extends Component
     public function render(): View
     {
         return view('legal-documents::view-document')
+            ->section('title', $this->document->title)
             ->layout(config('legal-documents.frontend.layout', 'layouts.app'));
     }
 }
