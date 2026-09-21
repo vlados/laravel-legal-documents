@@ -10,6 +10,7 @@ use Vlados\LegalDocuments\Models\LegalDocument;
 
 class EditLegalDocument extends EditRecord
 {
+    use \Vlados\LegalDocuments\Filament\Concerns\InteractsWithContentTranslations;
     protected static string $resource = LegalDocumentResource::class;
 
     protected function getHeaderActions(): array
@@ -17,21 +18,21 @@ class EditLegalDocument extends EditRecord
         return [
             // Primary action - Publish (if not current)
             Actions\Action::make('publish')
-                ->label(fn () => $this->record->is_current ? 'Публикуван' : 'Публикувай')
+                ->label(fn () => $this->record->is_current ? __('legal-documents::admin.published_short') : __('legal-documents::admin.publish'))
                 ->icon('heroicon-o-arrow-up-circle')
                 ->color(fn () => $this->record->is_current ? 'gray' : 'success')
                 ->disabled(fn () => $this->record->is_current)
                 ->requiresConfirmation()
                 ->modalIcon('heroicon-o-arrow-up-circle')
-                ->modalHeading('Публикуване на документа')
-                ->modalDescription(fn () => "Това ще направи версия {$this->record->version} текуща. ".($this->record->notify_users ? 'Потребителите ще бъдат уведомени.' : ''))
-                ->modalSubmitActionLabel('Публикувай')
+                ->modalHeading(__('legal-documents::admin.publish_document'))
+                ->modalDescription(fn () => __('legal-documents::admin.publish_confirmation', ['version' => $this->record->version]).' '.($this->record->notify_users ? __('legal-documents::admin.users_will_be_notified') : ''))
+                ->modalSubmitActionLabel(__('legal-documents::admin.publish'))
                 ->action(function () {
                     $this->record->publish();
 
                     Notification::make()
-                        ->title('Документът е публикуван успешно')
-                        ->body("Версия {$this->record->version} е текущата версия.")
+                        ->title(__('legal-documents::admin.published_success'))
+                        ->body(__('legal-documents::admin.version_current', ['version' => $this->record->version]))
                         ->success()
                         ->send();
 
@@ -40,26 +41,22 @@ class EditLegalDocument extends EditRecord
 
             // Duplicate action - Create new version
             Actions\Action::make('duplicate')
-                ->label('Нова версия')
+                ->label(__('legal-documents::admin.new_version'))
                 ->icon('heroicon-o-document-duplicate')
                 ->color('gray')
                 ->form([
                     \Filament\Forms\Components\TextInput::make('new_version')
-                        ->label('Нова версия')
+                        ->label(__('legal-documents::admin.new_version'))
                         ->required()
                         ->placeholder('2.0')
                         ->default(fn () => $this->suggestNextVersion()),
                 ])
                 ->action(function (array $data) {
-                    $newDocument = $this->record->replicate();
-                    $newDocument->version = $data['new_version'];
-                    $newDocument->is_current = false;
-                    $newDocument->published_at = null;
-                    $newDocument->save();
+                    $newDocument = $this->record->createNewVersion($data['new_version']);
 
                     Notification::make()
-                        ->title('Създадена е нова версия')
-                        ->body("Версия {$data['new_version']} е създадена като чернова.")
+                        ->title(__('legal-documents::admin.version_created'))
+                        ->body(__('legal-documents::admin.version_draft', ['version' => $data['new_version']]))
                         ->success()
                         ->send();
 
@@ -94,7 +91,7 @@ class EditLegalDocument extends EditRecord
 
     protected function getSavedNotificationTitle(): ?string
     {
-        return 'Документът е запазен';
+        return __('legal-documents::admin.document_saved');
     }
 
     protected function getRedirectUrl(): string

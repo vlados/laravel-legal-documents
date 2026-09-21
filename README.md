@@ -17,7 +17,8 @@ A Laravel package for managing legal documents (Privacy Policy, Terms of Service
 - **Filament Integration** - Optional admin panel with WordPress-style document editor
 - **Formal Document Control** - Professional legal document layout with revision history
 - **Frontend Routes** - Public pages to view legal documents with version history
-- **Internationalization** - Full i18n support (English and Bulgarian included)
+- **Content Translations** - Optional bundled Spatie adapter, custom translation drivers, and preserved source-language content
+- **Interface Localization** - English and Bulgarian labels, independent of content translations
 
 ## Screenshots
 
@@ -36,8 +37,9 @@ A Laravel package for managing legal documents (Privacy Policy, Terms of Service
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11.x or 12.x
-- Livewire 3.x
+- Laravel 11.x, 12.x, or 13.x
+- Livewire 3.x for frontend pages
+- Filament 4.x for the optional admin panel
 
 ## Installation
 
@@ -59,6 +61,30 @@ Publish and run the migrations:
 php artisan vendor:publish --tag=legal-documents-migrations
 php artisan migrate
 ```
+
+## Optional content translations
+
+Single-language mode is the default and does not require a translation package. To enable additional languages, install Spatie, publish its separate migrations, and configure the fixed source language:
+
+```bash
+composer require spatie/laravel-translatable:^6.0
+php artisan vendor:publish --tag=legal-documents-spatie-migrations
+php artisan migrate
+```
+
+```php
+// config/legal-documents.php
+ 'translations' => [
+     'driver' => 'spatie',
+     'source_locale' => 'en', // The language already stored in your original fields.
+     'locales' => ['en', 'bg'],
+     'fallback_locale' => null,
+ ],
+```
+
+`$document->title` remains source text; `$document->localized('bg')->values['title']` resolves translated content. Removing Spatie preserves readable source text and stored translations. Filament uses its own adapter-independent translation tabs; no additional translation UI plugin is required.
+
+See [the translation guide](docs/translations.md) for writing translations, fallback, custom adapters, version copying, published views, and dependency removal.
 
 ## Configuration
 

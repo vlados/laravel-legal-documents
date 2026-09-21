@@ -3,3 +3,7 @@
 .phpunit.result.cache
 .php-cs-fixer.cache
 composer.lock
+
+/.phpunit.cache/
+/compatibility/*/vendor/
+/compatibility/*/composer.lock

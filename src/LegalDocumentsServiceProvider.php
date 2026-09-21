@@ -3,7 +3,11 @@
 namespace Vlados\LegalDocuments;
 
 use Illuminate\Support\ServiceProvider;
-use Livewire\Livewire;
+use Vlados\LegalDocuments\Contracts\TranslationDriver;
+use Vlados\LegalDocuments\Exceptions\InvalidTranslationConfiguration;
+use Vlados\LegalDocuments\Translations\ContentTranslator;
+use Vlados\LegalDocuments\Translations\SingleLanguageDriver;
+use Vlados\LegalDocuments\Translations\Spatie\SpatieTranslationDriver;
 use Vlados\LegalDocuments\Http\Livewire\AcceptDocuments;
 use Vlados\LegalDocuments\Http\Livewire\ViewLegalDocument;
 
@@ -15,6 +19,22 @@ class LegalDocumentsServiceProvider extends ServiceProvider
             __DIR__.'/../config/legal-documents.php',
             'legal-documents'
         );
+
+        $this->app->scoped(TranslationDriver::class, function ($app) {
+            $driver = config('legal-documents.translations.driver');
+            if ($driver === null || ($driver === 'spatie' && ! trait_exists(\Spatie\Translatable\HasTranslations::class))) {
+                return new SingleLanguageDriver;
+            }
+            if ($driver === 'spatie') {
+                return $app->make(SpatieTranslationDriver::class);
+            }
+            if (! is_string($driver) || ! is_a($driver, TranslationDriver::class, true)) {
+                throw new InvalidTranslationConfiguration('translations.driver must be null, spatie, or a class implementing TranslationDriver.');
+            }
+
+            return $app->make($driver);
+        });
+        $this->app->scoped(ContentTranslator::class);
     }
 
     public function boot(): void
@@ -35,9 +55,17 @@ class LegalDocumentsServiceProvider extends ServiceProvider
             ], 'legal-documents-config');
 
             // Migrations
-            $this->publishesMigrations([
-                __DIR__.'/../database/migrations' => database_path('migrations'),
-            ], 'legal-documents-migrations');
+            $coreMigrations = [];
+            foreach (glob(__DIR__.'/../database/migrations/*.php') as $migration) {
+                $coreMigrations[$migration] = database_path('migrations/'.basename($migration));
+            }
+            $this->publishesMigrations($coreMigrations, 'legal-documents-migrations');
+
+            $translationMigrations = [];
+            foreach (glob(__DIR__.'/../database/migrations/spatie/*.php') as $migration) {
+                $translationMigrations[$migration] = database_path('migrations/'.basename($migration));
+            }
+            $this->publishesMigrations($translationMigrations, 'legal-documents-spatie-migrations');
 
             // Views
             $this->publishes([

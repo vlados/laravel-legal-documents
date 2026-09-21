@@ -31,11 +31,20 @@ class LegalDocumentResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationLabel = 'Правни документи';
+    public static function getNavigationLabel(): string
+    {
+        return __('legal-documents::admin.documents');
+    }
 
-    protected static ?string $modelLabel = 'Правен документ';
+    public static function getModelLabel(): string
+    {
+        return __('legal-documents::admin.document');
+    }
 
-    protected static ?string $pluralModelLabel = 'Правни документи';
+    public static function getPluralModelLabel(): string
+    {
+        return __('legal-documents::admin.documents');
+    }
 
     public static function getNavigationGroup(): ?string
     {
@@ -65,7 +74,7 @@ class LegalDocumentResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Чернови';
+        return __('legal-documents::admin.drafts');
     }
 
     public static function form(Schema $schema): Schema
@@ -81,8 +90,8 @@ class LegalDocumentResource extends Resource
                         Section::make()
                             ->schema([
                                 Forms\Components\TextInput::make('title')
-                                    ->label('Заглавие')
-                                    ->placeholder('Въведете заглавие на документа')
+                                    ->label(__('legal-documents::admin.title'))
+                                    ->placeholder(__('legal-documents::admin.title_placeholder'))
                                     ->required()
                                     ->maxLength(255)
                                     ->autofocus()
@@ -90,13 +99,13 @@ class LegalDocumentResource extends Resource
                             ]),
 
                         // Content Section
-                        Section::make('Съдържание')
+                        Section::make(__('legal-documents::admin.content'))
                             ->icon('heroicon-o-document-text')
                             ->collapsible()
                             ->schema([
                                 Forms\Components\RichEditor::make('content')
-                                    ->label('')
-                                    ->placeholder('Въведете съдържанието на документа...')
+                                    ->label(__('legal-documents::admin.content'))
+                                    ->placeholder(__('legal-documents::admin.content_placeholder'))
                                     ->required()
                                     ->toolbarButtons([
                                         'blockquote',
@@ -116,15 +125,15 @@ class LegalDocumentResource extends Resource
                             ]),
 
                         // Summary of Changes Section
-                        Section::make('Обобщение на промените')
+                        Section::make(__('legal-documents::admin.summary'))
                             ->icon('heroicon-o-clipboard-document-list')
-                            ->description('Опишете накратко какво е променено спрямо предишната версия')
+                            ->description(__('legal-documents::admin.summary_help'))
                             ->collapsible()
                             ->collapsed(fn (?LegalDocument $record) => $record === null)
                             ->schema([
                                 Forms\Components\Textarea::make('summary_of_changes')
-                                    ->label('')
-                                    ->placeholder('Напр. "Добавена нова секция за защита на данните", "Актуализирани условия за използване"...')
+                                    ->label(__('legal-documents::admin.summary'))
+                                    ->placeholder(__('legal-documents::admin.summary_placeholder'))
                                     ->rows(3),
                             ]),
                     ]),
@@ -134,85 +143,85 @@ class LegalDocumentResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         // Publish Section
-                        Section::make('Публикуване')
+                        Section::make(__('legal-documents::admin.publishing'))
                             ->icon('heroicon-o-globe-alt')
                             ->schema([
                                 // Status Display
                                 Forms\Components\Placeholder::make('status_display')
-                                    ->label('Статус')
+                                    ->label(__('legal-documents::admin.status'))
                                     ->content(function (?LegalDocument $record): string {
                                         if (! $record) {
-                                            return '📝 Нов документ';
+                                            return __('legal-documents::admin.new_status');
                                         }
                                         if ($record->is_current && $record->published_at) {
-                                            return '✅ Публикуван (текуща версия)';
+                                            return __('legal-documents::admin.current_status');
                                         }
                                         if ($record->published_at) {
-                                            return '📄 Публикуван (стара версия)';
+                                            return __('legal-documents::admin.old_status');
                                         }
 
-                                        return '📝 Чернова';
+                                        return __('legal-documents::admin.draft_status');
                                     }),
 
                                 Forms\Components\Placeholder::make('published_at_display')
-                                    ->label('Публикувано на')
+                                    ->label(__('legal-documents::admin.published_at'))
                                     ->visible(fn (?LegalDocument $record) => $record?->published_at !== null)
                                     ->content(fn (?LegalDocument $record) => $record?->published_at?->format('d.m.Y H:i')),
 
                                 Forms\Components\Placeholder::make('acceptances_display')
-                                    ->label('Приемания')
+                                    ->label(__('legal-documents::admin.acceptances'))
                                     ->visible(fn (?LegalDocument $record) => $record?->exists)
-                                    ->content(fn (?LegalDocument $record) => $record ? $record->acceptances()->count().' потребители' : '0 потребители'),
+                                    ->content(fn (?LegalDocument $record) => trans_choice('legal-documents::admin.users_count', $record?->acceptances()->count() ?? 0, ['count' => $record?->acceptances()->count() ?? 0])),
                             ]),
 
                         // Document Type Section
-                        Section::make('Тип документ')
+                        Section::make(__('legal-documents::admin.type'))
                             ->icon('heroicon-o-tag')
                             ->schema([
                                 Forms\Components\Select::make('legal_document_type_id')
-                                    ->label('')
+                                    ->label(__('legal-documents::admin.type'))
                                     ->relationship('type', 'name')
                                     ->required()
                                     ->searchable()
                                     ->preload()
-                                    ->placeholder('Изберете тип документ')
+                                    ->placeholder(__('legal-documents::admin.choose_type'))
                                     ->createOptionForm([
                                         Forms\Components\TextInput::make('name')
-                                            ->label('Наименование')
+                                            ->label(__('legal-documents::admin.name'))
                                             ->required(),
                                         Forms\Components\TextInput::make('slug')
-                                            ->label('Идентификатор')
+                                            ->label(__('legal-documents::admin.identifier'))
                                             ->required(),
                                     ]),
 
                                 Forms\Components\TextInput::make('version')
-                                    ->label('Версия')
+                                    ->label(__('legal-documents::admin.version'))
                                     ->required()
                                     ->maxLength(50)
                                     ->placeholder('1.0')
-                                    ->helperText('Напр. 1.0, 2.0, 2.1'),
+                                    ->helperText(__('legal-documents::admin.version_help')),
                             ]),
 
                         // Settings Section
-                        Section::make('Настройки')
+                        Section::make(__('legal-documents::admin.settings'))
                             ->icon('heroicon-o-cog-6-tooth')
                             ->collapsible()
                             ->schema([
                                 Forms\Components\Toggle::make('requires_re_acceptance')
-                                    ->label('Изисква повторно приемане')
-                                    ->helperText('Потребителите ще трябва да приемат отново документа')
+                                    ->label(__('legal-documents::admin.reacceptance'))
+                                    ->helperText(__('legal-documents::admin.reacceptance_help'))
                                     ->default(true)
                                     ->inline(false),
 
                                 Forms\Components\Toggle::make('notify_users')
-                                    ->label('Уведоми потребителите')
-                                    ->helperText('Изпрати имейл известия при публикуване')
+                                    ->label(__('legal-documents::admin.notify_users'))
+                                    ->helperText(__('legal-documents::admin.notify_help'))
                                     ->default(true)
                                     ->inline(false),
                             ]),
 
                         // Version History Section (only for existing records)
-                        Section::make('История на версиите')
+                        Section::make(__('legal-documents::admin.version_history'))
                             ->icon('heroicon-o-clock')
                             ->collapsible()
                             ->collapsed()
@@ -222,7 +231,7 @@ class LegalDocumentResource extends Resource
                                     ->label('')
                                     ->content(function (?LegalDocument $record): string {
                                         if (! $record?->type) {
-                                            return 'Няма налична история';
+                                            return __('legal-documents::admin.no_history');
                                         }
 
                                         $versions = $record->type->documents()
@@ -231,14 +240,14 @@ class LegalDocumentResource extends Resource
                                             ->get();
 
                                         if ($versions->isEmpty()) {
-                                            return 'Няма други версии';
+                                            return __('legal-documents::admin.no_other_versions');
                                         }
 
                                         $html = '<div class="space-y-2">';
                                         foreach ($versions as $version) {
-                                            $isCurrent = $version->is_current ? ' <span class="text-success-600 dark:text-success-400">(текуща)</span>' : '';
-                                            $isThis = $version->id === $record->id ? ' <span class="text-primary-600 dark:text-primary-400">← тази</span>' : '';
-                                            $date = $version->published_at?->format('d.m.Y') ?? 'Чернова';
+                                            $isCurrent = $version->is_current ? ' <span class="text-success-600 dark:text-success-400">'.e(__('legal-documents::admin.current_marker')).'</span>' : '';
+                                            $isThis = $version->id === $record->id ? ' <span class="text-primary-600 dark:text-primary-400">'.e(__('legal-documents::admin.viewing_marker')).'</span>' : '';
+                                            $date = $version->published_at?->format('d.m.Y') ?? __('legal-documents::admin.draft');
                                             $html .= "<div class=\"text-sm\">v{$version->version} - {$date}{$isCurrent}{$isThis}</div>";
                                         }
                                         $html .= '</div>';
@@ -248,54 +257,56 @@ class LegalDocumentResource extends Resource
                                     ->extraAttributes(['class' => 'prose dark:prose-invert']),
                             ]),
                     ]),
+                ...\Vlados\LegalDocuments\Filament\ContentTranslationFields::make(new LegalDocument),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->description(__('legal-documents::admin.source_controls'))
             ->columns([
                 Tables\Columns\TextColumn::make('title')
-                    ->label('Заглавие')
+                    ->label(__('legal-documents::admin.title'))
                     ->searchable()
                     ->sortable()
                     ->weight(FontWeight::SemiBold)
                     ->limit(50),
 
                 Tables\Columns\TextColumn::make('version')
-                    ->label('Версия')
+                    ->label(__('legal-documents::admin.version'))
                     ->badge()
                     ->color('gray')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Статус')
+                    ->label(__('legal-documents::admin.status'))
                     ->badge()
                     ->getStateUsing(function (LegalDocument $record): string {
                         if ($record->is_current && $record->published_at) {
-                            return 'Текуща';
+                            return __('legal-documents::admin.current');
                         }
                         if ($record->published_at) {
-                            return 'Публикувана';
+                            return __('legal-documents::admin.published');
                         }
 
-                        return 'Чернова';
+                        return __('legal-documents::admin.draft');
                     })
                     ->color(fn (string $state): string => match ($state) {
-                        'Текуща' => 'success',
-                        'Публикувана' => 'info',
-                        'Чернова' => 'warning',
+                        __('legal-documents::admin.current') => 'success',
+                        __('legal-documents::admin.published') => 'info',
+                        __('legal-documents::admin.draft') => 'warning',
                         default => 'gray',
                     })
                     ->icon(fn (string $state): string => match ($state) {
-                        'Текуща' => 'heroicon-o-check-circle',
-                        'Публикувана' => 'heroicon-o-document-check',
-                        'Чернова' => 'heroicon-o-pencil-square',
+                        __('legal-documents::admin.current') => 'heroicon-o-check-circle',
+                        __('legal-documents::admin.published') => 'heroicon-o-document-check',
+                        __('legal-documents::admin.draft') => 'heroicon-o-pencil-square',
                         default => 'heroicon-o-document',
                     }),
 
                 Tables\Columns\TextColumn::make('acceptances_count')
-                    ->label('Приемания')
+                    ->label(__('legal-documents::admin.acceptances'))
                     ->counts('acceptances')
                     ->badge()
                     ->color('gray')
@@ -303,13 +314,13 @@ class LegalDocumentResource extends Resource
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('published_at')
-                    ->label('Публикувано')
+                    ->label(__('legal-documents::admin.published_on'))
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->placeholder('—'),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Обновено')
+                    ->label(__('legal-documents::admin.updated'))
                     ->dateTime('d.m.Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -317,88 +328,84 @@ class LegalDocumentResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('legal_document_type_id')
-                    ->label('Тип документ')
+                    ->label(__('legal-documents::admin.type'))
                     ->relationship('type', 'name')
                     ->preload()
                     ->searchable(),
 
                 Tables\Filters\TernaryFilter::make('status')
-                    ->label('Статус')
-                    ->placeholder('Всички')
-                    ->trueLabel('Публикувани')
-                    ->falseLabel('Чернови')
+                    ->label(__('legal-documents::admin.status'))
+                    ->placeholder(__('legal-documents::admin.all'))
+                    ->trueLabel(__('legal-documents::admin.published_plural'))
+                    ->falseLabel(__('legal-documents::admin.drafts'))
                     ->queries(
                         true: fn (Builder $query) => $query->whereNotNull('published_at'),
                         false: fn (Builder $query) => $query->whereNull('published_at'),
                     ),
 
                 Tables\Filters\TernaryFilter::make('is_current')
-                    ->label('Текуща версия')
-                    ->placeholder('Всички')
-                    ->trueLabel('Само текущи')
-                    ->falseLabel('Само стари'),
+                    ->label(__('legal-documents::admin.current_version'))
+                    ->placeholder(__('legal-documents::admin.all'))
+                    ->trueLabel(__('legal-documents::admin.only_current'))
+                    ->falseLabel(__('legal-documents::admin.only_old')),
             ])
             ->actions([
                 Actions\ActionGroup::make([
                     Actions\Action::make('publish')
-                        ->label('Публикувай')
+                        ->label(__('legal-documents::admin.publish'))
                         ->icon('heroicon-o-arrow-up-circle')
                         ->color('success')
                         ->requiresConfirmation()
                         ->modalIcon('heroicon-o-arrow-up-circle')
-                        ->modalHeading('Публикуване на документа')
-                        ->modalDescription(fn (LegalDocument $record) => "Това ще направи версия {$record->version} текуща. ".($record->notify_users ? 'Потребителите ще бъдат уведомени.' : ''))
-                        ->modalSubmitActionLabel('Публикувай')
+                        ->modalHeading(__('legal-documents::admin.publish_document'))
+                        ->modalDescription(fn (LegalDocument $record) => __('legal-documents::admin.publish_confirmation', ['version' => $record->version]).' '.($record->notify_users ? __('legal-documents::admin.users_will_be_notified') : ''))
+                        ->modalSubmitActionLabel(__('legal-documents::admin.publish'))
                         ->visible(fn (LegalDocument $record) => ! $record->is_current)
                         ->action(function (LegalDocument $record) {
                             $record->publish();
 
                             Notification::make()
-                                ->title('Документът е публикуван успешно')
-                                ->body("Версия {$record->version} е текущата версия.")
+                                ->title(__('legal-documents::admin.published_success'))
+                                ->body(__('legal-documents::admin.version_current', ['version' => $record->version]))
                                 ->success()
                                 ->send();
                         }),
 
                     Actions\Action::make('notify')
-                        ->label('Изпрати известия')
+                        ->label(__('legal-documents::admin.send_notifications'))
                         ->icon('heroicon-o-bell-alert')
                         ->color('warning')
                         ->requiresConfirmation()
                         ->modalIcon('heroicon-o-bell-alert')
-                        ->modalHeading('Изпращане на известия')
-                        ->modalDescription('Ще бъдат изпратени известия на всички потребители, които не са приели този документ.')
-                        ->modalSubmitActionLabel('Изпрати')
+                        ->modalHeading(__('legal-documents::admin.sending_notifications'))
+                        ->modalDescription(__('legal-documents::admin.notification_confirmation'))
+                        ->modalSubmitActionLabel(__('legal-documents::admin.send'))
                         ->visible(fn (LegalDocument $record) => $record->is_current && $record->requires_re_acceptance)
                         ->action(function (LegalDocument $record) {
                             $record->notifyUsers();
 
                             Notification::make()
-                                ->title('Известията са изпратени')
+                                ->title(__('legal-documents::admin.notifications_sent'))
                                 ->success()
                                 ->send();
                         }),
 
                     Actions\Action::make('duplicate')
-                        ->label('Създай нова версия')
+                        ->label(__('legal-documents::admin.create_version'))
                         ->icon('heroicon-o-document-duplicate')
                         ->color('gray')
                         ->form([
                             Forms\Components\TextInput::make('new_version')
-                                ->label('Нова версия')
+                                ->label(__('legal-documents::admin.new_version'))
                                 ->required()
                                 ->placeholder('2.0'),
                         ])
                         ->action(function (LegalDocument $record, array $data) {
-                            $newDocument = $record->replicate();
-                            $newDocument->version = $data['new_version'];
-                            $newDocument->is_current = false;
-                            $newDocument->published_at = null;
-                            $newDocument->save();
+                            $newDocument = $record->createNewVersion($data['new_version']);
 
                             Notification::make()
-                                ->title('Създадена е нова версия')
-                                ->body("Версия {$data['new_version']} е създадена като чернова.")
+                                ->title(__('legal-documents::admin.version_created'))
+                                ->body(__('legal-documents::admin.version_draft', ['version' => $data['new_version']]))
                                 ->success()
                                 ->send();
 
@@ -406,25 +413,25 @@ class LegalDocumentResource extends Resource
                         }),
 
                     Actions\EditAction::make()
-                        ->label('Редактирай'),
+                        ->label(__('legal-documents::admin.edit')),
 
                     Actions\DeleteAction::make()
-                        ->label('Изтрий'),
+                        ->label(__('legal-documents::admin.delete')),
                 ])
                     ->icon('heroicon-m-ellipsis-vertical')
-                    ->tooltip('Действия'),
+                    ->tooltip(__('legal-documents::admin.actions')),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->emptyStateHeading('Няма правни документи')
-            ->emptyStateDescription('Създайте първия си правен документ, за да започнете.')
+            ->emptyStateHeading(__('legal-documents::admin.no_documents'))
+            ->emptyStateDescription(__('legal-documents::admin.no_documents_help'))
             ->emptyStateIcon('heroicon-o-document-text')
             ->emptyStateActions([
                 Actions\Action::make('create')
-                    ->label('Създай документ')
+                    ->label(__('legal-documents::admin.create_document'))
                     ->url(static::getUrl('create'))
                     ->icon('heroicon-o-plus')
                     ->button(),

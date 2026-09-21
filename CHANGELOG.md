@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Add optional content translation drivers with bundled Spatie companion storage.
+- Preserve scalar source-language fields, including after Spatie is removed.
+- Add complete-document fallback, localized public views and recipient notifications.
+- Inherit Spatie's explicit global fallback locale when enabled, using the package fallback when unset or null.
+- Add backend-independent Filament translation tabs and English/Bulgarian interface labels.
+- Copy all translations when creating a new document version, without copying acceptances.
+- Preserve concurrent edits to untouched source/additional languages and keep existing slugs stable.
+- Add dependency-absence, integration, removal-lifecycle, and MySQL concurrency coverage.
+- Align optional admin requirements with the Filament 4 resource APIs already in use.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

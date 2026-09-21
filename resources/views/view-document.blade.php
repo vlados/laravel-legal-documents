@@ -14,7 +14,7 @@
                     </svg>
                 </li>
                 <li class="text-gray-900 dark:text-white font-medium">
-                    {{ $documentType->name }}
+                    {{ $localizedType->values['name'] }}
                 </li>
             </ol>
         </nav>
@@ -33,7 +33,7 @@
                             {{ __('legal-documents::legal-documents.document_title') }}
                         </dt>
                         <dd class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
-                            {{ $document->title }}
+                            {{ $localizedDocument->values['title'] }}
                         </dd>
                     </div>
                     <div>
@@ -76,7 +76,7 @@
         </div>
 
         {{-- Revision History Table --}}
-        @if ($this->versions->count() > 0)
+        @if ($versions->count() > 0)
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
                 <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 px-6 py-4">
                     <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -102,9 +102,8 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach ($this->versions as $v)
+                            @foreach ($versions as $v)
                                 @php
-                                    $versionDocument = $documentType->documents()->where('version', $v->version)->first();
                                     $isCurrentlyViewing = $v->version === $selectedVersion;
                                 @endphp
                                 <tr class="{{ $isCurrentlyViewing ? 'bg-primary-50 dark:bg-primary-900/10' : '' }}">
@@ -124,7 +123,7 @@
                                         {{ $v->published_at->format('d.m.Y') }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $versionDocument?->summary_of_changes ?? __('legal-documents::legal-documents.initial_release') }}
+                                        {{ $versionContents[$v->id]->values['summary_of_changes'] ?? __('legal-documents::legal-documents.initial_release') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                         @if ($isCurrentlyViewing)
@@ -170,11 +169,15 @@
             </div>
         @endif
 
+        @if ($localizedDocument->isFallback)
+            <p class="mb-4 text-sm">{{ __('legal-documents::legal-documents.content_fallback', ['locale' => $localizedDocument->locale]) }}</p>
+        @endif
+
         {{-- Document Content --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <div class="px-6 py-8 sm:px-8 sm:py-10">
-                <article class="prose dark:prose-invert max-w-none">
-                    {!! $document->content !!}
+                <article lang="{{ $localizedDocument->locale }}" class="prose dark:prose-invert max-w-none">
+                    {!! $localizedDocument->values['content'] !!}
                 </article>
             </div>
         </div>
@@ -187,14 +190,6 @@
         </div>
 
         {{-- Navigation to other legal documents --}}
-        @php
-            $otherTypes = \Vlados\LegalDocuments\Models\LegalDocumentType::query()
-                ->where('id', '!=', $documentType->id)
-                ->whereHas('currentDocument')
-                ->ordered()
-                ->get();
-        @endphp
-
         @if ($otherTypes->isNotEmpty())
             <div class="mt-12 border-t border-gray-200 dark:border-gray-700 pt-8">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -207,11 +202,11 @@
                             class="block p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                         >
                             <h3 class="font-medium text-gray-900 dark:text-white">
-                                {{ $type->name }}
+                                {{ $otherTypeContents[$type->id]->values['name'] }}
                             </h3>
-                            @if ($type->description)
+                            @if ($otherTypeContents[$type->id]->values['description'])
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ Str::limit($type->description, 100) }}
+                                    {{ Str::limit($otherTypeContents[$type->id]->values['description'], 100) }}
                                 </p>
                             @endif
                             <span class="mt-2 inline-flex items-center text-sm text-primary-600 dark:text-primary-400">

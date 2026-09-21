@@ -7,11 +7,12 @@ use Vlados\LegalDocuments\Filament\Resources\LegalDocumentResource;
 
 class CreateLegalDocument extends CreateRecord
 {
+    use \Vlados\LegalDocuments\Filament\Concerns\InteractsWithContentTranslations;
     protected static string $resource = LegalDocumentResource::class;
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        return 'Документът е създаден';
+        return __('legal-documents::admin.document_created');
     }
 
     protected function getRedirectUrl(): string

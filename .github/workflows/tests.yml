@@ -1,0 +1,74 @@
+name: tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            testbench: '^9.0'
+            mode: core
+          - php: '8.3'
+            testbench: '^10.0'
+            mode: core
+          - php: '8.3'
+            testbench: '^10.0'
+            mode: spatie
+          - php: '8.3'
+            testbench: '^11.0'
+            mode: core
+          - php: '8.3'
+            testbench: '^11.0'
+            mode: spatie
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, intl, pdo_sqlite, pdo_mysql
+          coverage: none
+      - name: Install isolated dependencies
+        working-directory: compatibility/${{ matrix.mode }}
+        run: composer require 'orchestra/testbench:${{ matrix.testbench }}' --no-interaction --prefer-dist
+      - run: bash compatibility/test.sh '${{ matrix.mode }}'
+      - run: composer validate --strict --no-check-lock
+  removal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite
+          coverage: none
+      - run: composer install --working-dir=compatibility/core --no-interaction --prefer-dist
+      - run: composer install --working-dir=compatibility/spatie --no-interaction --prefer-dist
+      - run: bash compatibility/test-removal.sh
+  mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: legal_documents_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -ptest"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_mysql, pdo_sqlite
+          coverage: none
+      - run: composer install --working-dir=compatibility/spatie --no-interaction --prefer-dist
+      - run: bash compatibility/test.sh spatie tests/MySql
+        env:
+          LEGAL_MYSQL_TESTS: '1'
+          LEGAL_MYSQL_PASSWORD: test

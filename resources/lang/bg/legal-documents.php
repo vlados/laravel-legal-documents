@@ -1,6 +1,13 @@
 <?php
 
 return [
+    'translations' => 'Преводи',
+    'translation_driver_unavailable' => 'Преводите са конфигурирани, но недостъпни. Инсталирайте spatie/laravel-translatable за редактиране на допълнителни езици.',
+    'remove_translation' => 'Изтрий този превод при запазване',
+    'translation_help' => 'Основен език: :locale. Попълнете заглавие и съдържание за всеки допълнителен език. Празните раздели се пропускат.',
+    'invalid_translation' => 'Невалидни данни за превод.',
+    'translation_fields' => ['title' => 'Заглавие', 'content' => 'Съдържание', 'summary_of_changes' => 'Обобщение на промените', 'name' => 'Наименование', 'description' => 'Описание'],
+    'content_fallback' => 'Документът е показан на :locale, тъй като няма пълен превод.',
     // General
     'legal_documents' => 'Правни документи',
     'home' => 'Начало',
