@@ -64,6 +64,8 @@ php artisan migrate
 
 ## Optional content translations
 
+Upgrading from v1? Read the [v2 upgrade guide](docs/upgrading-to-v2.md) for dependency changes and published configuration/view updates.
+
 Single-language mode is the default and does not require a translation package. To enable additional languages with the bundled Spatie adapter, install Spatie, publish its separate migrations, and configure the fixed source language. Custom `TranslationDriver` implementations use their own dependencies and storage:
 
 ```bash
