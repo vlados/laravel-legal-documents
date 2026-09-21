@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-09-21
+
+### Upgrade notes
+
+- Spatie Laravel Translatable is now optional. Applications that use it must declare their own dependency.
+- The optional admin integration targets Filament 4; the Lara Zeus translation plugin is no longer suggested or needed by this package.
+- Content translations require explicit driver/source-language configuration and, for the bundled Spatie adapter, separately published migrations.
+- Existing scalar source content and acceptance records are preserved. See the [v2 upgrade guide](docs/upgrading-to-v2.md) before upgrading published config or view overrides.
+
+### Added and changed
+
+- Add optional content translation drivers with bundled Spatie companion storage.
+- Preserve scalar source-language fields, including after Spatie is removed.
+- Add complete-document fallback, localized public views and recipient notifications.
+- Inherit Spatie's explicit global fallback locale when enabled, using the package fallback when unset or null.
+- Add backend-independent Filament translation tabs and English/Bulgarian interface labels.
+- Copy all translations when creating a new document version, without copying acceptances.
+- Preserve concurrent edits to untouched source/additional languages and keep existing slugs stable.
+- Add dependency-absence, integration, removal-lifecycle, and MySQL concurrency coverage.
+- Run core, Spatie, removal-lifecycle, and transaction-isolation tests on PostgreSQL 16 and 18 in CI.
+- Align optional admin requirements with the Filament 4 resource APIs already in use.
 ## [1.2.0] - 2025-12-15
 
 ### Added

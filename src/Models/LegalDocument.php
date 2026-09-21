@@ -12,6 +12,8 @@ use Vlados\LegalDocuments\Notifications\LegalDocumentUpdated;
 
 class LegalDocument extends Model
 {
+    use \Vlados\LegalDocuments\Traits\HasLocalizedContent;
+
     protected $fillable = [
         'legal_document_type_id',
         'version',
@@ -73,7 +75,26 @@ class LegalDocument extends Model
             ->first();
     }
 
-    public function publish(bool $notifyUsers = null): self
+    public function createNewVersion(string $version): static
+    {
+        if (trim($version) === '' || mb_strlen($version) > 50) {
+            throw new \InvalidArgumentException('A version must contain between 1 and 50 characters.');
+        }
+
+        return $this->getConnection()->transaction(function () use ($version) {
+            $source = $this->newQuery()->whereKey($this->getKey())->lockForUpdate()->firstOrFail();
+            $copy = $source->withoutRelations()->replicate();
+            $copy->version = $version;
+            $copy->published_at = null;
+            $copy->is_current = false;
+            $copy->save();
+            app(\Vlados\LegalDocuments\Translations\ContentTranslator::class)->copyTranslations($source, $copy);
+
+            return $copy;
+        });
+    }
+
+    public function publish(?bool $notifyUsers = null): self
     {
         $shouldNotify = $notifyUsers ?? $this->notify_users;
 

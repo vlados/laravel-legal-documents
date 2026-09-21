@@ -24,9 +24,9 @@ class LegalDocumentUpdated extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $documentTitle = $this->document->title;
-        $typeName = $this->document->type->name;
-        $summaryOfChanges = $this->document->summary_of_changes;
+        $content = $this->document->localized();
+        $typeName = $this->document->type->localized()->values['name'];
+        $summaryOfChanges = $content->values['summary_of_changes'];
         $acceptanceRoute = config('legal-documents.acceptance_route', 'legal.accept');
 
         $message = (new MailMessage)
@@ -50,16 +50,21 @@ class LegalDocumentUpdated extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
+        $content = $this->document->localized();
+        $type = $this->document->type->localized();
+
         return [
             'type' => 'legal_document_updated',
             'document_id' => $this->document->id,
             'document_type_id' => $this->document->legal_document_type_id,
             'document_type_slug' => $this->document->type->slug,
-            'document_type_name' => $this->document->type->name,
-            'document_title' => $this->document->title,
+            'document_type_name' => $type->values['name'],
+            'document_title' => $content->values['title'],
             'version' => $this->document->version,
             'requires_re_acceptance' => $this->document->requires_re_acceptance,
-            'summary_of_changes' => $this->document->summary_of_changes,
+            'summary_of_changes' => $content->values['summary_of_changes'],
+            'content_locale' => $content->locale,
+            'document_type_locale' => $type->locale,
         ];
     }
 

@@ -28,11 +28,20 @@ class LegalDocumentTypeResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?string $navigationLabel = 'Типове документи';
+    public static function getNavigationLabel(): string
+    {
+        return __('legal-documents::admin.types');
+    }
 
-    protected static ?string $modelLabel = 'Тип документ';
+    public static function getModelLabel(): string
+    {
+        return __('legal-documents::admin.type');
+    }
 
-    protected static ?string $pluralModelLabel = 'Типове документи';
+    public static function getPluralModelLabel(): string
+    {
+        return __('legal-documents::admin.types');
+    }
 
     public static function getNavigationGroup(): ?string
     {
@@ -57,18 +66,18 @@ class LegalDocumentTypeResource extends Resource
                 Grid::make(1)
                     ->columnSpan(2)
                     ->schema([
-                        Section::make('Основна информация')
+                        Section::make(__('legal-documents::admin.basic_information'))
                             ->icon('heroicon-o-information-circle')
                             ->schema([
                                 Forms\Components\TextInput::make('name')
-                                    ->label('Наименование')
-                                    ->placeholder('Напр. Политика за поверителност')
+                                    ->label(__('legal-documents::admin.name'))
+                                    ->placeholder(__('legal-documents::admin.name_placeholder'))
                                     ->required()
                                     ->maxLength(255)
                                     ->autofocus()
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(function (Set $set, ?string $state, ?string $old) {
-                                        if (blank($state)) {
+                                    ->afterStateUpdated(function (Set $set, Get $get, ?string $state, string $operation) {
+                                        if ($operation !== 'create' || blank($state) || filled($get('slug'))) {
                                             return;
                                         }
 
@@ -76,20 +85,20 @@ class LegalDocumentTypeResource extends Resource
                                     }),
 
                                 Forms\Components\TextInput::make('slug')
-                                    ->label('Идентификатор (slug)')
+                                    ->label(__('legal-documents::admin.slug'))
                                     ->placeholder('privacy-policy')
                                     ->required()
                                     ->unique(ignoreRecord: true)
                                     ->maxLength(255)
-                                    ->helperText('Уникален идентификатор за системата. Автоматично се генерира от наименованието.')
+                                    ->helperText(__('legal-documents::admin.slug_help'))
                                     ->rules(['alpha_dash']),
 
                                 Forms\Components\Textarea::make('description')
-                                    ->label('Описание')
-                                    ->placeholder('Кратко описание на този тип документ...')
+                                    ->label(__('legal-documents::admin.description'))
+                                    ->placeholder(__('legal-documents::admin.description_placeholder'))
                                     ->rows(3)
                                     ->maxLength(1000)
-                                    ->helperText('Това описание помага на администраторите да разберат предназначението на документа.'),
+                                    ->helperText(__('legal-documents::admin.description_help')),
                             ]),
                     ]),
 
@@ -98,84 +107,86 @@ class LegalDocumentTypeResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         // Status Section
-                        Section::make('Статус')
+                        Section::make(__('legal-documents::admin.status'))
                             ->icon('heroicon-o-signal')
                             ->schema([
                                 Forms\Components\Placeholder::make('documents_count_display')
-                                    ->label('Версии')
+                                    ->label(__('legal-documents::admin.versions'))
                                     ->visible(fn (?LegalDocumentType $record) => $record?->exists)
                                     ->content(function (?LegalDocumentType $record): string {
                                         if (! $record) {
-                                            return '0 версии';
+                                            return trans_choice('legal-documents::admin.versions_count', 0, ['count' => 0]);
                                         }
                                         $count = $record->documents()->count();
 
-                                        return $count.' '.trans_choice('версия|версии|версии', $count);
+                                        return trans_choice('legal-documents::admin.versions_count', $count, ['count' => $count]);
                                     }),
 
                                 Forms\Components\Placeholder::make('current_version_display')
-                                    ->label('Текуща версия')
+                                    ->label(__('legal-documents::admin.current_version'))
                                     ->visible(fn (?LegalDocumentType $record) => $record?->exists && $record?->currentDocument)
-                                    ->content(fn (?LegalDocumentType $record) => $record?->currentDocument?->version ?? 'Няма публикувана версия'),
+                                    ->content(fn (?LegalDocumentType $record) => $record?->currentDocument?->version ?? __('legal-documents::admin.no_published_version')),
 
                                 Forms\Components\Placeholder::make('created_at_display')
-                                    ->label('Създаден')
+                                    ->label(__('legal-documents::admin.created'))
                                     ->visible(fn (?LegalDocumentType $record) => $record?->exists)
                                     ->content(fn (?LegalDocumentType $record) => $record?->created_at?->format('d.m.Y H:i')),
                             ]),
 
                         // Settings Section
-                        Section::make('Настройки')
+                        Section::make(__('legal-documents::admin.settings'))
                             ->icon('heroicon-o-cog-6-tooth')
                             ->schema([
                                 Forms\Components\Toggle::make('is_required')
-                                    ->label('Задължителен документ')
-                                    ->helperText('Задължителен за ВСИЧКИ потребители при регистрация')
+                                    ->label(__('legal-documents::admin.required_document'))
+                                    ->helperText(__('legal-documents::admin.required_help'))
                                     ->default(true)
                                     ->inline(false)
                                     ->live(),
 
                                 Forms\Components\Select::make('required_for_roles')
-                                    ->label('Задължителен за роли')
-                                    ->helperText('Документът е задължителен само за потребители с избраните роли')
+                                    ->label(__('legal-documents::admin.required_roles'))
+                                    ->helperText(__('legal-documents::admin.roles_help'))
                                     ->multiple()
                                     ->options(fn () => LegalDocumentType::getAvailableRoles())
                                     ->visible(fn () => config('legal-documents.roles.enabled', false))
                                     ->disabled(fn (Get $get) => $get('is_required'))
-                                    ->placeholder('Изберете роли...'),
+                                    ->placeholder(__('legal-documents::admin.choose_roles')),
 
                                 Forms\Components\TextInput::make('sort_order')
-                                    ->label('Подредба')
+                                    ->label(__('legal-documents::admin.sort_order'))
                                     ->numeric()
                                     ->default(0)
                                     ->minValue(0)
-                                    ->helperText('По-малките числа се показват първи'),
+                                    ->helperText(__('legal-documents::admin.sort_help')),
                             ]),
                     ]),
+                ...\Vlados\LegalDocuments\Filament\ContentTranslationFields::make(new LegalDocumentType),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->description(__('legal-documents::admin.source_controls'))
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Наименование')
+                    ->label(__('legal-documents::admin.name'))
                     ->searchable()
                     ->sortable()
                     ->weight(FontWeight::SemiBold),
 
                 Tables\Columns\TextColumn::make('slug')
-                    ->label('Идентификатор')
+                    ->label(__('legal-documents::admin.identifier'))
                     ->searchable()
                     ->badge()
                     ->color('gray')
                     ->copyable()
-                    ->copyMessage('Идентификаторът е копиран')
+                    ->copyMessage(__('legal-documents::admin.identifier_copied'))
                     ->copyMessageDuration(1500),
 
                 Tables\Columns\IconColumn::make('is_required')
-                    ->label('Задължителен')
+                    ->label(__('legal-documents::admin.required'))
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
@@ -184,23 +195,23 @@ class LegalDocumentTypeResource extends Resource
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('required_for_roles')
-                    ->label('За роли')
+                    ->label(__('legal-documents::admin.for_roles'))
                     ->badge()
                     ->color('warning')
                     ->separator(', ')
-                    ->placeholder('Всички')
+                    ->placeholder(__('legal-documents::admin.all'))
                     ->visible(fn () => config('legal-documents.roles.enabled', false))
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('currentDocument.version')
-                    ->label('Текуща версия')
+                    ->label(__('legal-documents::admin.current_version'))
                     ->badge()
                     ->color(fn (?string $state) => $state ? 'success' : 'gray')
-                    ->placeholder('Няма')
+                    ->placeholder(__('legal-documents::admin.none'))
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('documents_count')
-                    ->label('Версии')
+                    ->label(__('legal-documents::admin.versions'))
                     ->counts('documents')
                     ->badge()
                     ->color('gray')
@@ -208,13 +219,13 @@ class LegalDocumentTypeResource extends Resource
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Подредба')
+                    ->label(__('legal-documents::admin.sort_order'))
                     ->sortable()
                     ->alignCenter()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Обновено')
+                    ->label(__('legal-documents::admin.updated'))
                     ->dateTime('d.m.Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -223,15 +234,15 @@ class LegalDocumentTypeResource extends Resource
             ->reorderable('sort_order')
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_required')
-                    ->label('Задължителен')
-                    ->placeholder('Всички')
-                    ->trueLabel('Само задължителни')
-                    ->falseLabel('Само незадължителни'),
+                    ->label(__('legal-documents::admin.required'))
+                    ->placeholder(__('legal-documents::admin.all'))
+                    ->trueLabel(__('legal-documents::admin.only_required'))
+                    ->falseLabel(__('legal-documents::admin.only_optional')),
             ])
             ->actions([
                 Actions\ActionGroup::make([
                     Actions\Action::make('view_documents')
-                        ->label('Виж документите')
+                        ->label(__('legal-documents::admin.view_documents'))
                         ->icon('heroicon-o-document-text')
                         ->color('gray')
                         ->url(fn (LegalDocumentType $record) => LegalDocumentResource::getUrl('index', [
@@ -239,7 +250,7 @@ class LegalDocumentTypeResource extends Resource
                         ])),
 
                     Actions\Action::make('create_document')
-                        ->label('Създай нова версия')
+                        ->label(__('legal-documents::admin.create_version'))
                         ->icon('heroicon-o-plus-circle')
                         ->color('success')
                         ->url(fn (LegalDocumentType $record) => LegalDocumentResource::getUrl('create', [
@@ -247,32 +258,32 @@ class LegalDocumentTypeResource extends Resource
                         ])),
 
                     Actions\EditAction::make()
-                        ->label('Редактирай'),
+                        ->label(__('legal-documents::admin.edit')),
 
                     Actions\DeleteAction::make()
-                        ->label('Изтрий')
+                        ->label(__('legal-documents::admin.delete'))
                         ->before(function (LegalDocumentType $record, Actions\DeleteAction $action) {
                             if ($record->documents()->exists()) {
                                 $action->cancel();
-                                $action->failureNotificationTitle('Не може да се изтрие');
-                                $action->failureNotification()?->body('Този тип има свързани документи. Първо изтрийте документите.');
+                                $action->failureNotificationTitle(__('legal-documents::admin.cannot_delete'));
+                                $action->failureNotification()?->body(__('legal-documents::admin.has_documents'));
                             }
                         }),
                 ])
                     ->icon('heroicon-m-ellipsis-vertical')
-                    ->tooltip('Действия'),
+                    ->tooltip(__('legal-documents::admin.actions')),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->emptyStateHeading('Няма типове документи')
-            ->emptyStateDescription('Създайте първия тип документ (напр. Политика за поверителност, Общи условия).')
+            ->emptyStateHeading(__('legal-documents::admin.no_types'))
+            ->emptyStateDescription(__('legal-documents::admin.no_types_help'))
             ->emptyStateIcon('heroicon-o-tag')
             ->emptyStateActions([
                 Actions\Action::make('create')
-                    ->label('Създай тип документ')
+                    ->label(__('legal-documents::admin.create_type'))
                     ->url(static::getUrl('create'))
                     ->icon('heroicon-o-plus')
                     ->button(),

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LegalDocumentType extends Model
 {
+    use \Vlados\LegalDocuments\Traits\HasLocalizedContent;
+
     protected $fillable = [
         'slug',
         'name',

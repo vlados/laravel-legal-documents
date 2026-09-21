@@ -18,7 +18,7 @@
                 @endif
 
                 <div class="space-y-4">
-                    @foreach ($this->pendingDocuments as $document)
+                    @foreach ($pendingDocuments as $document)
                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                             <div class="flex items-start justify-between">
                                 <div class="flex items-start gap-3">
@@ -31,7 +31,7 @@
                                     >
                                     <div>
                                         <label for="doc-{{ $document->id }}" class="font-medium text-gray-900 dark:text-white cursor-pointer">
-                                            {{ $document->type->name }}
+                                            {{ $typeContents[$document->id]->values['name'] }}
                                         </label>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
                                             {{ __('legal-documents::legal-documents.version', ['version' => $document->version]) }}
@@ -39,9 +39,9 @@
                                                 &middot; {{ $document->published_at->format('d.m.Y') }}
                                             @endif
                                         </p>
-                                        @if ($document->summary_of_changes)
+                                        @if ($documentContents[$document->id]->values['summary_of_changes'])
                                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                <strong>{{ __('legal-documents::legal-documents.changes') }}</strong> {{ $document->summary_of_changes }}
+                                                <strong>{{ __('legal-documents::legal-documents.changes') }}</strong> {{ $documentContents[$document->id]->values['summary_of_changes'] }}
                                             </p>
                                         @endif
                                     </div>
@@ -70,7 +70,7 @@
                     <button
                         type="button"
                         wire:click="submit"
-                        @disabled(count($acceptedIds) !== count($this->pendingDocuments))
+                        @disabled(count($acceptedIds) !== count($pendingDocuments))
                         class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {{ __('legal-documents::legal-documents.continue') }}
@@ -81,7 +81,7 @@
     </div>
 
     {{-- Document Viewer Modal --}}
-    @if ($this->viewingDocument)
+    @if ($viewingDocument)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" wire:click="closeDocument"></div>
@@ -92,10 +92,10 @@
                     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                                {{ $this->viewingDocument->title }}
+                                {{ $documentContents[$viewingDocument->id]->values['title'] }}
                             </h2>
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ $this->viewingDocument->type->name }} &middot; {{ __('legal-documents::legal-documents.version', ['version' => $this->viewingDocument->version]) }}
+                                {{ $typeContents[$viewingDocument->id]->values['name'] }} &middot; {{ __('legal-documents::legal-documents.version', ['version' => $viewingDocument->version]) }}
                             </p>
                         </div>
                         <button
@@ -111,8 +111,11 @@
                     </div>
 
                     <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
-                        <div class="prose dark:prose-invert max-w-none">
-                            {!! $this->viewingDocument->content !!}
+                        @if ($documentContents[$viewingDocument->id]->isFallback)
+                            <p>{{ __('legal-documents::legal-documents.content_fallback', ['locale' => $documentContents[$viewingDocument->id]->locale]) }}</p>
+                        @endif
+                        <div lang="{{ $documentContents[$viewingDocument->id]->locale }}" class="prose dark:prose-invert max-w-none">
+                            {!! $documentContents[$viewingDocument->id]->values['content'] !!}
                         </div>
                     </div>
 
@@ -124,10 +127,10 @@
                         >
                             {{ __('legal-documents::legal-documents.close') }}
                         </button>
-                        @unless (in_array($this->viewingDocument->id, $acceptedIds))
+                        @unless (in_array($viewingDocument->id, $acceptedIds))
                             <button
                                 type="button"
-                                wire:click="toggleAcceptance({{ $this->viewingDocument->id }})"
+                                wire:click="toggleAcceptance({{ $viewingDocument->id }})"
                                 class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                             >
                                 {{ __('legal-documents::legal-documents.accept') }}

@@ -6,6 +6,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Vlados\LegalDocuments\Translations\ContentTranslator;
 use Vlados\LegalDocuments\Models\LegalDocument;
 
 class AcceptDocuments extends Component
@@ -97,6 +98,16 @@ class AcceptDocuments extends Component
 
     public function render(): View
     {
-        return view('legal-documents::accept-documents');
+        $documents = $this->pendingDocuments;
+        $translator = app(ContentTranslator::class);
+        $contents = $translator->localizeMany($documents->all());
+        $types = $translator->localizeMany($documents->map(fn ($document) => $document->type)->all());
+
+        return view('legal-documents::accept-documents', [
+            'pendingDocuments' => $documents,
+            'documentContents' => array_combine($documents->modelKeys(), $contents),
+            'typeContents' => array_combine($documents->modelKeys(), $types),
+            'viewingDocument' => $this->viewingDocument,
+        ]);
     }
 }

@@ -1,6 +1,18 @@
 <?php
 
 return [
+    'translations' => [
+        // Opt in explicitly: null, 'spatie', or a TranslationDriver class.
+        'driver' => null,
+        // The fixed language of existing scalar content; required when enabled.
+        'source_locale' => null,
+        // Spatie has no global source-language or available-locales setting.
+        'locales' => [],
+        // With the Spatie driver, its explicit global fallback takes precedence.
+        // Use this value when that setting is null/unset or Spatie is unavailable.
+        'fallback_locale' => null,
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | User Model
