@@ -68,4 +68,32 @@ class TranslationLockingTest extends TestCase
             DB::disconnect('concurrent');
         }
     }
+
+    public function test_version_copy_uses_current_source_and_translations_inside_an_existing_snapshot(): void
+    {
+        $document = $this->document();
+        $document->saveTranslation('bg', ['title' => 'Original BG', 'content' => 'Original body']);
+        $connection = DB::connection();
+        $connection->statement('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+        $connection->beginTransaction();
+        try {
+            $connection->table('legal_document_spatie_translations')->get();
+            $otherEditor = (new LegalDocument)->setConnection('concurrent')->newQuery()->findOrFail($document->id);
+            $otherEditor->getConnection()->transaction(function () use ($otherEditor) {
+                $otherEditor->saveTranslation('en', ['title' => 'Current source', 'content' => 'Current source body']);
+                $otherEditor->saveTranslation('bg', ['title' => 'Current BG', 'content' => 'Current BG body']);
+            });
+
+            $copy = $document->createNewVersion('2.0');
+            $connection->commit();
+            $this->assertSame('Current source', $copy->title);
+            $this->assertSame('Current BG', $copy->localized('bg')->values['title']);
+            $this->assertSame('Current BG body', $copy->localized('bg')->values['content']);
+        } finally {
+            while ($connection->transactionLevel() > 0) {
+                $connection->rollBack();
+            }
+            DB::disconnect('concurrent');
+        }
+    }
 }

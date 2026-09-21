@@ -1,6 +1,6 @@
 # Optional Content Translations Implementation Plan
 
-**Status:** Implementation delivered on `feature/optional-content-translations`; local suites and browser checks pass. The full CI matrix and MySQL runtime check remain pending. See the [implementation record](2026-09-21-optional-content-translations-results.md). The detailed checklists below preserve the original plan; the record tracks actual delivery and deviations.
+**Status:** Implementation delivered on `feature/optional-content-translations`; local suites and browser checks pass. The compatibility CI matrix passed, and review fixes were verified against an isolated MySQL server. See the [implementation record](2026-09-21-optional-content-translations-results.md) for results and review follow-up. The detailed checklists below preserve the original plan; the record tracks actual delivery and deviations.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

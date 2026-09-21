@@ -63,6 +63,8 @@ $document->forgetTranslation('bg');
 
 The API belongs to this package. The domain models do not use `HasTranslations`, so native Spatie calls such as `$document->getTranslation('title', 'bg')` are not available. The adapter's companion models use Spatie internally.
 
+Saving source-language content persists only the translated source fields. Unrelated pending changes on the model stay unsaved; call `save()` separately when you intend to persist them.
+
 For lists, avoid one storage query per item:
 
 ```php
@@ -145,7 +147,7 @@ public function putLocale(Model $record, string $locale, array $values): void;
 public function forgetLocale(Model $record, string $locale): void;
 ```
 
-- `readAll()` returns exact additional translations: `['bg' => ['title' => '...', 'content' => '...', 'summary_of_changes' => null]]`. No fallback and no source-locale shadow records.
+- `readAll()` returns exact additional translations: `['bg' => ['title' => '...', 'content' => '...', 'summary_of_changes' => null]]`. No fallback and no source-locale shadow records. Inside a transaction, use a current/locking read: version copying locks the source parent first and must include translations committed before that lock, even if an outer transaction already established a snapshot.
 - `readMany()` returns one map per input record in the same order; batch reads by parent type/connection.
 - `putLocale()` replaces one complete language, preserving all others. Optional fields may be null.
 - `forgetLocale()` removes only that additional language.

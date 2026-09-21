@@ -196,9 +196,13 @@ class ContentTranslator
         $this->validateLocale($locale);
         $values = $this->normalize($record, $values);
         $record->getConnection()->transaction(function () use ($record, $locale, $values) {
-            $record->newQuery()->whereKey($record->getKey())->lockForUpdate()->firstOrFail();
+            $locked = $record->newQuery()->whereKey($record->getKey())->lockForUpdate()->firstOrFail();
             if ($locale === $this->sourceLocale()) {
-                $record->fill($values)->save();
+                $locked->fill($values)->save();
+                foreach (array_keys($values) as $field) {
+                    $record->setAttribute($field, $locked->getAttribute($field));
+                }
+                $record->syncOriginalAttributes(array_keys($values));
             } else {
                 $this->driver->putLocale($record, $locale, $values);
             }

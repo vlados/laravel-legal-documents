@@ -48,6 +48,7 @@ class EditLegalDocument extends EditRecord
                     \Filament\Forms\Components\TextInput::make('new_version')
                         ->label(__('legal-documents::admin.new_version'))
                         ->required()
+                        ->maxLength(50)
                         ->placeholder('2.0')
                         ->default(fn () => $this->suggestNextVersion()),
                 ])

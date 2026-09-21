@@ -398,6 +398,7 @@ class LegalDocumentResource extends Resource
                             Forms\Components\TextInput::make('new_version')
                                 ->label(__('legal-documents::admin.new_version'))
                                 ->required()
+                                ->maxLength(50)
                                 ->placeholder('2.0'),
                         ])
                         ->action(function (LegalDocument $record, array $data) {

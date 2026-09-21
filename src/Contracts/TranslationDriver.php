@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 interface TranslationDriver
 {
-    /** @return array<string, array<string, string|null>> Exact additional locales, without fallback. */
+    /**
+     * Return exact additional locales without fallback. When called within a transaction,
+     * use a current/locking read so version copies include changes committed before the parent lock.
+     *
+     * @return array<string, array<string, string|null>>
+     */
     public function readAll(Model $record): array;
 
     /**

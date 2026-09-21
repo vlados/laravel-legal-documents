@@ -1,9 +1,11 @@
 <?php
 
 use Filament\Facades\Filament;
+use Filament\Actions\Testing\TestAction;
 use Livewire\Livewire;
 use Vlados\LegalDocuments\Filament\Resources\LegalDocumentResource\Pages\CreateLegalDocument;
 use Vlados\LegalDocuments\Filament\Resources\LegalDocumentResource\Pages\EditLegalDocument;
+use Vlados\LegalDocuments\Filament\Resources\LegalDocumentResource\Pages\ListLegalDocuments;
 use Vlados\LegalDocuments\Filament\Resources\LegalDocumentTypeResource\Pages\EditLegalDocumentType;
 use Vlados\LegalDocuments\Models\LegalDocument;
 use Vlados\LegalDocuments\Tests\Fixtures\ArrayTranslationDriver;
@@ -106,3 +108,17 @@ it('does not overwrite a concurrent source edit when saving another language', f
     $page->fillForm(['content_translations.bg.title' => 'Second save'])->call('save')->assertHasNoFormErrors();
     expect($document->fresh()->content)->toBe('<p>Concurrent source</p>');
 });
+
+it('rejects oversized versions in both duplication forms before creating a draft', function (bool $table) {
+    $document = $this->document();
+    $page = $table
+        ? Livewire::test(ListLegalDocuments::class)
+        : Livewire::test(EditLegalDocument::class, ['record' => $document->id]);
+    $action = TestAction::make('duplicate');
+    if ($table) {
+        $action->table($document);
+    }
+    $page->callAction($action, data: ['new_version' => str_repeat('v', 51)])
+        ->assertHasActionErrors(['new_version' => 'max']);
+    expect(LegalDocument::count())->toBe(1);
+})->with([false, true]);

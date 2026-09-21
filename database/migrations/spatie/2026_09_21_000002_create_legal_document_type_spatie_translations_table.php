@@ -10,7 +10,9 @@ return new class extends Migration
     {
         Schema::create('legal_document_type_spatie_translations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('legal_document_type_id')->unique()->constrained('legal_document_types')->cascadeOnDelete();
+            $table->foreignId('legal_document_type_id')->unique('ld_type_translation_parent_unique');
+            $table->foreign('legal_document_type_id', 'ld_type_translation_parent_foreign')
+                ->references('id')->on('legal_document_types')->cascadeOnDelete();
             $table->json('name')->nullable();
             $table->json('description')->nullable();
             $table->timestamps();

@@ -11,15 +11,24 @@ class RelationalTranslationDriver implements TranslationDriver
 
     public function readAll(Model $record): array
     {
-        return $this->readMany([$record])[0];
+        return $this->readRecords([$record], $record->getConnection()->transactionLevel() > 0)[0];
     }
 
     public function readMany(array $records): array
     {
+        return $this->readRecords($records);
+    }
+
+    private function readRecords(array $records, bool $lockForUpdate = false): array
+    {
         $result = [];
         foreach ($records as $record) {
-            $rows = $record->getConnection()->table('fixture_translations')
-                ->where('parent_type', $record->getTable())->where('parent_id', $record->getKey())->get();
+            $query = $record->getConnection()->table('fixture_translations')
+                ->where('parent_type', $record->getTable())->where('parent_id', $record->getKey());
+            if ($lockForUpdate) {
+                $query->lockForUpdate();
+            }
+            $rows = $query->get();
             $map = [];
             foreach ($rows as $row) {
                 $fields = $record instanceof \Vlados\LegalDocuments\Models\LegalDocument

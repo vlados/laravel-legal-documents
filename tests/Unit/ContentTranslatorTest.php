@@ -58,6 +58,20 @@ it('updates the source without making an additional translation', function () {
     expect(app(ArrayTranslationDriver::class)->readAll($document))->toBe([]);
 });
 
+it('saves source text without persisting or discarding unrelated pending changes', function () {
+    $document = $this->document();
+    $document->notify_users = true;
+    $document->version = 'pending';
+    $document->saveTranslation('en', ['title' => 'Revised', 'content' => '<p>Revised</p>']);
+
+    expect($document->fresh()->notify_users)->toBeFalse();
+    expect($document->fresh()->version)->toBe('1.0');
+    expect($document->fresh()->title)->toBe('Revised');
+    expect($document->title)->toBe('Revised');
+    expect($document->isDirty('title'))->toBeFalse();
+    expect($document->getDirty())->toBe(['version' => 'pending', 'notify_users' => true]);
+});
+
 it('validates fields and locales', function (string $locale, array $values) {
     $this->document()->saveTranslation($locale, $values);
 })->with([

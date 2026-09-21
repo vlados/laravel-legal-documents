@@ -64,7 +64,7 @@ php artisan migrate
 
 ## Optional content translations
 
-Single-language mode is the default and does not require a translation package. To enable additional languages, install Spatie, publish its separate migrations, and configure the fixed source language:
+Single-language mode is the default and does not require a translation package. To enable additional languages with the bundled Spatie adapter, install Spatie, publish its separate migrations, and configure the fixed source language. Custom `TranslationDriver` implementations use their own dependencies and storage:
 
 ```bash
 composer require spatie/laravel-translatable:^6.0

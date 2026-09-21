@@ -37,10 +37,15 @@ class SpatieTranslationDriver implements TranslationDriver
 
     public function readAll(Model $record): array
     {
-        return $this->readMany([$record])[0];
+        return $this->readRecords([$record], $record->getConnection()->transactionLevel() > 0)[0];
     }
 
     public function readMany(array $records): array
+    {
+        return $this->readRecords($records);
+    }
+
+    private function readRecords(array $records, bool $lockForUpdate = false): array
     {
         $groups = [];
         $result = array_fill(0, count($records), []);
@@ -55,7 +60,12 @@ class SpatieTranslationDriver implements TranslationDriver
             $storage = $group['storage'];
             $foreignKey = $group['foreignKey'];
             $this->assertMigrated($storage);
-            $rows = $storage->newQuery()->whereIn($foreignKey, array_values($group['ids']))->get()->keyBy($foreignKey);
+            $query = $storage->newQuery()->whereIn($foreignKey, array_values($group['ids']));
+            if ($lockForUpdate) {
+                // Version copies need current rows even when an outer transaction has an older snapshot.
+                $query->lockForUpdate();
+            }
+            $rows = $query->get()->keyBy($foreignKey);
             foreach ($group['ids'] as $index => $id) {
                 $row = $rows->get($id);
                 if ($row) {

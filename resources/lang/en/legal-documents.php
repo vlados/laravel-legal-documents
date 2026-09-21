@@ -2,9 +2,9 @@
 
 return [
     'translations' => 'Translations',
-    'translation_driver_unavailable' => 'Translation support is configured but unavailable. Install spatie/laravel-translatable to edit additional languages.',
+    'translation_driver_unavailable' => 'Translation support is configured but unavailable. Install or configure the selected translation adapter to edit additional languages.',
     'remove_translation' => 'Remove this translation when saving',
-    'translation_help' => 'Source language: :locale. Complete the title and body for each additional document language. Empty tabs are ignored.',
+    'translation_help' => 'Source language: :locale. Complete the required fields for each additional language. Empty tabs are ignored.',
     'invalid_translation' => 'Invalid translation data.',
     'translation_fields' => ['title' => 'Title', 'content' => 'Content', 'summary_of_changes' => 'Summary of changes', 'name' => 'Name', 'description' => 'Description'],
     'content_fallback' => 'This document is shown in :locale because a complete translation is unavailable.',
