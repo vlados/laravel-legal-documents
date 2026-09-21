@@ -38,6 +38,21 @@ class TestCase extends Orchestra
         $app['config']->set('database.connections.testing', [
             'driver' => 'sqlite', 'database' => getenv('LEGAL_TRANSLATION_LIFECYCLE_DATABASE') ?: ':memory:', 'prefix' => '', 'foreign_key_constraints' => true,
         ]);
+        if (getenv('LEGAL_PGSQL_TESTS') === '1') {
+            if (getenv('LEGAL_MYSQL_TESTS') === '1') {
+                throw new \RuntimeException('Run PostgreSQL and MySQL suites separately.');
+            }
+            $connection = [
+                'driver' => 'pgsql', 'host' => getenv('LEGAL_PGSQL_HOST') ?: '127.0.0.1',
+                'port' => getenv('LEGAL_PGSQL_PORT') ?: 5432,
+                'database' => 'legal_documents_pgsql_test',
+                'username' => getenv('LEGAL_PGSQL_USER') ?: 'postgres',
+                'password' => getenv('LEGAL_PGSQL_PASSWORD') ?: 'test',
+                'charset' => 'utf8', 'prefix' => '', 'search_path' => 'public', 'sslmode' => 'prefer',
+            ];
+            $app['config']->set('database.connections.testing', $connection);
+            $app['config']->set('database.connections.concurrent', $connection);
+        }
         $app['config']->set('legal-documents.frontend.enabled', false);
         $app['config']->set('legal-documents.notifications.queue', false);
         $app['config']->set('legal-documents.user_model', User::class);
@@ -65,6 +80,10 @@ class TestCase extends Orchestra
     {
         if (getenv('LEGAL_TRANSLATION_LIFECYCLE_PHASE') === 'verify') {
             return;
+        }
+        if (getenv('LEGAL_PGSQL_TESTS') === '1') {
+            // This opt-in suite owns only the dedicated legal_documents_pgsql_test database.
+            Schema::dropAllTables();
         }
         Schema::create('users', function (Blueprint $table) {
             $table->id();

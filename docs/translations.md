@@ -154,6 +154,8 @@ public function forgetLocale(Model $record, string $locale): void;
 
 Support both domain model types, use the parent's database connection, and make writes participate in its transaction. Arrange cascading cleanup when parents are deleted. Use current/locking reads when merging storage maps under concurrent transactions. Do not keep request locale or model data in a global cache.
 
+PostgreSQL's default `READ COMMITTED` isolation reads current rows when locking. Under `REPEATABLE READ`, a concurrent update after the transaction's snapshot can instead raise SQLSTATE `40001`. Let that failure propagate so the entire outer transaction rolls back, then retry the complete transaction; retrying only a nested translation operation cannot refresh the outer snapshot. See [PostgreSQL's transaction isolation documentation](https://www.postgresql.org/docs/current/transaction-iso.html).
+
 The relational fixture at `tests/Fixtures/RelationalTranslationDriver.php` demonstrates separate-row storage and rollback semantics; its intentionally simple reads are test-only. A production adapter for Astrotomic or another package needs that package's models/migrations and a batched `readMany()` implementation. This release bundles only Spatie. Switching drivers does not convert existing translations automatically.
 
 ## Verification
@@ -169,6 +171,24 @@ bash compatibility/test.sh spatie
 bash compatibility/test-removal.sh
 ```
 
-The base environment does not install Spatie. Integration tests are skipped there and run in the isolated Spatie/Filament environment. The removal check creates a temporary SQLite database in one process with Spatie and opens it in a second process without Spatie.
+The base environment does not install Spatie. Integration tests are skipped there and run in the isolated Spatie/Filament environment. By default, the removal check creates a temporary SQLite database in one process with Spatie and opens it in a second process without Spatie.
 
 CI covers supported Laravel/Testbench combinations and a dedicated MySQL 8 test for writes inside an existing repeatable-read transaction. The MySQL suite only runs with `LEGAL_MYSQL_TESTS=1` and owns a dedicated `legal_documents_test` database; it drops that database's tables between runs. Never point it at an application database.
+
+CI also runs the full core and Spatie suites plus the dependency-removal check on PostgreSQL 16 and 18. This includes migrations, JSON translations, version/acceptance behavior, custom-driver rollback, Filament editing, and two-connection transaction tests. Additional PostgreSQL checks cover optional-migration rollback/reinstallation and serialization-failure rollback/retry under repeatable-read isolation.
+
+To run against a disposable local PostgreSQL instance with `pdo_pgsql` installed:
+
+```bash
+# Create the dedicated legal_documents_pgsql_test database first.
+export LEGAL_PGSQL_TESTS=1
+export LEGAL_PGSQL_HOST=127.0.0.1
+export LEGAL_PGSQL_PORT=5432
+export LEGAL_PGSQL_USER=postgres
+export LEGAL_PGSQL_PASSWORD=test
+bash compatibility/test.sh core
+bash compatibility/test.sh spatie
+bash compatibility/test-removal.sh
+```
+
+This opt-in mode uses only the fixed `legal_documents_pgsql_test` database and drops its tables between tests. The removal check preserves it between its seed and dependency-absent verification processes. Use a disposable instance, run these commands sequentially, and do not enable `LEGAL_MYSQL_TESTS` at the same time.

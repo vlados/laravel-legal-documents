@@ -10,6 +10,7 @@
 - Copy all translations when creating a new document version, without copying acceptances.
 - Preserve concurrent edits to untouched source/additional languages and keep existing slugs stable.
 - Add dependency-absence, integration, removal-lifecycle, and MySQL concurrency coverage.
+- Run core, Spatie, removal-lifecycle, and transaction-isolation tests on PostgreSQL 16 and 18 in CI.
 - Align optional admin requirements with the Filament 4 resource APIs already in use.
 
 

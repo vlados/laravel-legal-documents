@@ -78,3 +78,37 @@ jobs:
         env:
           LEGAL_MYSQL_TESTS: '1'
           LEGAL_MYSQL_PASSWORD: test
+  postgresql:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: ['16', '18']
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: legal_documents_pgsql_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres -d legal_documents_pgsql_test"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      LEGAL_PGSQL_TESTS: '1'
+      LEGAL_PGSQL_PASSWORD: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_pgsql, pdo_sqlite
+          coverage: none
+      - run: composer install --working-dir=compatibility/core --no-interaction --prefer-dist
+      - run: composer install --working-dir=compatibility/spatie --no-interaction --prefer-dist
+      - run: bash compatibility/test.sh core
+      - run: bash compatibility/test.sh spatie
+      - run: bash compatibility/test-removal.sh

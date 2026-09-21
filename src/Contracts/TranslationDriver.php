@@ -8,7 +8,8 @@ interface TranslationDriver
 {
     /**
      * Return exact additional locales without fallback. When called within a transaction,
-     * use a current/locking read so version copies include changes committed before the parent lock.
+     * use a current/locking read so version copies include changes committed before the parent lock,
+     * or propagate a serialization failure when the database cannot safely use the current rows.
      *
      * @return array<string, array<string, string|null>>
      */

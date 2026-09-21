@@ -61,4 +61,12 @@ After the review fixes, Laravel 12 and 13 core each passed 28 tests (31 skips, 6
 
 The generic docstring-coverage suggestion and governance-service onboarding were not treated as functional defects. The storage contract documentation was clarified where its transaction semantics changed.
 
+## PostgreSQL verification
+
+Added PostgreSQL 16 and 18 CI jobs running the complete core and Spatie suites and dependency-removal lifecycle against a dedicated database. Five PostgreSQL-specific tests cover optional migration rollback/reinstallation, current locale writes and version copies under `READ COMMITTED`, and safe serialization failure plus fresh retry under `REPEATABLE READ`.
+
+Local PostgreSQL 18.0, running in an isolated temporary cluster, passed 28 core tests (69 assertions), 60 integration tests (204 assertions), and both dependency-removal phases (2 and 5 assertions). The default SQLite suites still passed: 28 core tests and 55 integration tests. PHP lint, Composer validation, workflow YAML parsing, and `git diff --check` passed. The temporary server was shut down afterward; no application database was used.
+
+No production behavior changes were needed. PostgreSQL's serialization errors are preserved rather than hiding a stale snapshot; the caller must retry the entire outer transaction. The contract and integration guide now state this explicitly.
+
 Published-content immutability, translated SQL search/sorting, locale-specific routes, and automatic migration between translation vendors remain outside this feature's scope.
